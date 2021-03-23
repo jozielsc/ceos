@@ -1,0 +1,26 @@
+version: "3.7"
+services:
+  api:
+    image: flask:dev
+    ports:
+      - 5000:5000
+    env_file:
+      - ./api-vol/.env
+    volumes:
+      - ./api-vol:/app
+  #mongodb:
+   # image: mongo
+    #ports:
+     # - 27017:27017
+    #volumes:
+     # - mongo-vol:/data/db
+  db:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    volumes:
+      - db-vol:/var/lib/postgresql/data
+      - ./api-vol/database-files:/docker-entrypoint-initdb.d
+volumes:
+  api-vol:
+  db-vol:
