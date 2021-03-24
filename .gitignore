@@ -1,2 +1,4 @@
 app-vol
 db-vol
+__pycache__
+*.pyc
