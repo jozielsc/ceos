@@ -1,7 +1,9 @@
 FROM python:3.7-stretch
-ADD . /app
 WORKDIR /app
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
-ENTRYPOINT ["python"]
-CMD ["run.py"]
+ENV FLASK_APP=run.py
+ENV FLASK_RUN_HOST=0.0.0.0
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt --no-cache-dir
+EXPOSE 5000
+COPY . .
+CMD ["flask", "run"]

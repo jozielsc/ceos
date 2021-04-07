@@ -1,6 +1,11 @@
 from flask import Blueprint
 
-from .views import registration_view, login_view
+from ceos.auth.views import (
+    registration_view,
+    login_view,
+    status_view,
+    logout_view
+)
 
 auth = Blueprint('auth', __name__)
 
@@ -16,5 +21,19 @@ auth.add_url_rule(
 auth.add_url_rule(
     '/login',
     view_func=login_view,
+    methods=['POST']
+)
+
+# Define the rule for the registration url --->  /status
+auth.add_url_rule(
+    '/status',
+    view_func=status_view,
+    methods=['GET']
+)
+
+# Define the rule for the registration url --->  /logout
+auth.add_url_rule(
+    '/logout',
+    view_func=logout_view,
     methods=['POST']
 )

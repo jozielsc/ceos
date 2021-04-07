@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  api:
+    build: ./app-vol/
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app-vol:/app
+    environment:
+        FLASK_ENV: development
+  redis:
+    image: "redis:alpine"

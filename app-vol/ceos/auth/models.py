@@ -2,25 +2,62 @@ import jwt
 from flask_bcrypt import Bcrypt
 from datetime import datetime, timedelta
 from flask import current_app
-from ..db import db
+from ceos.db import db
+
+class BlacklistToken(db.Model):
+    """
+    Token Model for storing JWT tokens
+    """
+    __tablename__ = 'blacklist_tokens'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    token = db.Column(db.String(500), unique=True, nullable=False)
+    blacklisted_on = db.Column(db.DateTime, nullable=False)
+
+    def __init__(self, token):
+        self.token = token
+        self.blacklisted_on = datetime.now()
+
+    def __repr__(self):
+        return '<id: token: {}'.format(self.token)
+
+    @staticmethod
+    def check_blacklist(auth_token):
+        # check whether auth token has been blacklisted
+        res = BlacklistToken.query.filter_by(token=str(auth_token)).first()
+        if res:
+            return True  
+        else:
+            return False
+
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
 
 class User(db.Model):
 
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(256), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    # name = db.Column(db.String(256), nullable=False)
     email = db.Column(db.String(256), nullable=False, unique=True)
     password = db.Column(db.String(256), nullable=False)
     enabled = db.Column(db.Boolean, default=True)
-    # bucketlists = db.relationship(
-    #     'Bucketlist', order_by='Bucketlist.id', cascade="all, delete-orphan")
+    registered_on = db.Column(db.DateTime, nullable=False)
 
-    def __init__(self, name, email, password):
+    def __init__(self, email, password):
         """Initialize the user with an email and a password."""
-        self.name = name
+        # self.name = name
         self.email = email
-        self.password = Bcrypt().generate_password_hash(password).decode()
+        self.password = Bcrypt().generate_password_hash(
+            password, current_app.config.get('BCRYPT_LOG_ROUNDS')
+        ).decode()
+        self.registered_on = datetime.now()
+
+    def __repr__(self):
+        return '<User %r>' % self.email
 
     def password_is_valid(self, password):
         """
@@ -38,42 +75,47 @@ class User(db.Model):
     def is_active(self):
         return self.enabled
 
-    def generate_token(self, user_id):
-        """ Generates the access token"""
-
+    def encode_auth_token(self, user_id):
+        """
+        Generates the Auth Token
+        :return: string
+        """
         try:
-            # set up a payload with an expiration time
+
             payload = {
-                'exp': datetime.utcnow() + timedelta(minutes=5),
+                'exp': datetime.utcnow() + timedelta(days=0, seconds=5),
                 'iat': datetime.utcnow(),
                 'sub': user_id
             }
-            # create the byte string token using the payload and the SECRET key
-            jwt_string = jwt.encode(
+
+            return jwt.encode(
                 payload,
                 current_app.config.get('SECRET_KEY'),
                 algorithm='HS256'
             )
-            return jwt_string
+
 
         except Exception as e:
-            # return an error in string format if an exception occurs
-            return str(e)
-
+            raise e
 
     @staticmethod
-    def decode_token(token):
-        """Decodes the access token from the Authorization header."""
+    def decode_auth_token(auth_token):
+        """
+        Validates the auth token
+        :param auth_token:
+        :return: integer|string
+        """
         try:
-            # try to decode the token using our SECRET variable
-            payload = jwt.decode(token, current_app.config.get('SECRET_KEY'))
-            return payload['sub']
+            payload = jwt.decode(auth_token, current_app.config.get('SECRET_KEY'))
+            is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
+            if is_blacklisted_token:
+                return 'Token blacklisted. Please log in again.'
+            else:
+                return payload['sub']
         except jwt.ExpiredSignatureError:
-            # the token is expired, return an error string
-            return "Expired token. Please login to get a new token"
+            return 'Signature expired. Please log in again.'
         except jwt.InvalidTokenError:
-            # the token is invalid, return an error string
-            return "Invalid token. Please register or login"
+            return 'Invalid token. Please log in again.'
 
 # criar classe de grupos.
 # class Group(db.Model):
