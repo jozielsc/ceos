@@ -1,9 +1,23 @@
-FROM python:3.7-stretch
+FROM python:3.8.1-slim-buster
+
+# set worker dir
 WORKDIR /app
-ENV FLASK_APP=run.py
-ENV FLASK_RUN_HOST=0.0.0.0
-COPY requirements.txt requirements.txt
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    netcat libmagic1 ffmpeg libsm6 libxext6 ghostscript
+
+#python3-opencv
+#install dependecies
+RUN pip install --upgrade pip
+COPY ./requirements.txt /app/requirements.txt
 RUN pip install -r requirements.txt --no-cache-dir
-EXPOSE 5000
-COPY . .
-CMD ["flask", "run"]
+
+COPY . /app
+
+# run entrypoint.sh
+ENTRYPOINT ["/app/entrypoint.sh"]

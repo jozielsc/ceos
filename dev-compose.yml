@@ -1,26 +1,24 @@
 version: "3.9"
 services:
-  api:
-    #build: ./app-vol/
-    image: worker:latest
+  app:
+    build: ./app-vol/
+    # image: worker:latest
+    command: python manage.py run -h 0.0.0.0
     ports:
-      - "80:5000"
+      - "5000:5000"
     volumes:
       - ./app-vol:/app
-    environment:
-        FLASK_ENV: development
+    env_file:
+      - ./envs/.env-dev
   redis:
     image: "redis:alpine"
   db:
-    image: postgres:latest
-    ports:
-      - 5432:5432
+    image: postgres:12-alpine
     volumes:
-      - db-vol:/var/lib/postgresql/data
-      - ./app-vol/database-files:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_PASSWORD="dbtestsenha1"
-
+      - POSTGRES_USER=hello_flask
+      - POSTGRES_PASSWORD=hello_flask
+      - POSTGRES_DB=hello_flask_dev
 volumes:
-   app-vol:
-   db-vol:
+  postgres_data:

@@ -3,9 +3,9 @@ from os import path
 
 from flask import Flask
 
-from ceos.db import db
+from ceos.db import db, ma
 from ceos.settings import app_config
-from ceos.auth.route import auth
+from ceos.pseudocrawler.route import app as crawler
 
 def create_app(config_name=None, extra_config=None):
 
@@ -22,12 +22,8 @@ def create_app(config_name=None, extra_config=None):
         app.config.update(**extra_config)
 
     db.init_app(app)
+    ma.init_app(app)
 
-    with app.app_context():
-        db.session.close()
-        # db.drop_all()
-        db.create_all()
-
-    app.register_blueprint(auth, url_prefix='/api/auth')
+    app.register_blueprint(crawler, url_prefix='/crawler')
 
     return app

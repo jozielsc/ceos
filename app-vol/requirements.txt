@@ -1,8 +1,14 @@
 flask
 redis
-#flask_restful
-python-dotenv
 flask_sqlalchemy
+marshmallow-sqlalchemy
+flask-marshmallow
 click
 Flask-JWT
 flask-bcrypt
+psycopg2-binary
+gunicorn
+requests
+pandas
+python-magic
+camelot-py[cv]

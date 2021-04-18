@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  api:
+    build:
+    # build: ./app-vol/
+    # image: worker:latest
+        context: ./app-vol/
+        dockerfile: Dockerfile.prod
+    command: gunicorn --bind 0.0.0.0:5000 manage:cli
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./envs/.env-prod
+    depends_on:
+      - db
+  redis:
+    image: "redis:alpine"
+  db:
+    image: postgres:12-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./envs/.env-prod.db
+
+volumes:
+  postgres_data:
