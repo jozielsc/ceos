@@ -1,4 +1,4 @@
-flask
+Flask==1.1.2
 redis
 flask_sqlalchemy
 marshmallow-sqlalchemy
@@ -12,3 +12,4 @@ requests
 pandas
 python-magic
 camelot-py[cv]
+flask_restx
